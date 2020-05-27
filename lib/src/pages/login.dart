@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
+import 'package:nannys/src/Models/model_user.dart';
 import 'package:nannys/src/pages/home.dart';
+import 'package:nannys/src/services/api_request.dart';
 import 'package:toast/toast.dart';
 import 'package:http/http.dart' as http;
 
@@ -11,8 +13,12 @@ class LoginPage extends StatefulWidget {
   _Login createState() => _Login();
 }
 
+final _formKey = GlobalKey<FormState>();
 class _Login extends State<LoginPage> {
   bool isLogged = false;
+
+  Person _person = new Person();
+
   loginFacebook() async {
     final fbLogin = FacebookLogin();
     final result = await fbLogin.logInWithReadPermissions(['email']);
@@ -37,12 +43,14 @@ class _Login extends State<LoginPage> {
       isLogged = login;
     });
   }
+
   iraHome() {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (BuildContext context) => MyHome()),
     );
   }
+
   //data of user logged with fb
   getDataUser(FacebookLoginResult result) async {
     final token = result.accessToken.token;
@@ -50,8 +58,13 @@ class _Login extends State<LoginPage> {
         'https://graph.facebook.com/v2.12/me?fields=name,first_name,last_name,email&access_token=$token');
     final profile = json.decode(graphResponse.body);
     Toast.show('${profile["name"]}', context,
-                  duration: Toast.LENGTH_SHORT, gravity: Toast.BOTTOM);
+        duration: Toast.LENGTH_SHORT, gravity: Toast.BOTTOM);
     return print(profile);
+  }
+
+  loginApi(login) async {
+    http.Response response = await loginUser(login);
+    print(json.decode(response.body));
   }
 
   bool _rememberMe = false;
@@ -91,12 +104,21 @@ class _Login extends State<LoginPage> {
           alignment: Alignment.centerLeft,
           decoration: kBoxDecorationStyle,
           height: 60.0,
-          child: TextField(
+          child: TextFormField(
+            onSaved: (value) {
+              _person.email = value;
+            },
             keyboardType: TextInputType.emailAddress,
             style: TextStyle(
               color: Colors.white,
               fontFamily: 'OpenSans',
             ),
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'Please enter some text';
+              }
+              return null;
+            },
             decoration: InputDecoration(
               border: InputBorder.none,
               contentPadding: EdgeInsets.only(top: 14.0),
@@ -126,12 +148,20 @@ class _Login extends State<LoginPage> {
           alignment: Alignment.centerLeft,
           decoration: kBoxDecorationStyle,
           height: 60.0,
-          child: TextField(
+          child: TextFormField(
+            onSaved: (value) => _person.name = value,
             obscureText: true,
             style: TextStyle(
               color: Colors.white,
               fontFamily: 'OpenSans',
             ),
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'Please enter some text';
+              }
+
+              return null;
+            },
             decoration: InputDecoration(
               border: InputBorder.none,
               contentPadding: EdgeInsets.only(top: 14.0),
@@ -195,7 +225,7 @@ class _Login extends State<LoginPage> {
       width: double.infinity,
       child: RaisedButton(
         elevation: 5.0,
-        onPressed: () => print('Login Button Pressed'),
+        onPressed: () => { },
         padding: EdgeInsets.all(15.0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30.0),
@@ -265,9 +295,7 @@ class _Login extends State<LoginPage> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
           _buildSocialBtn(
-            () => {
-              iraHome()
-            },
+            () => {iraHome()},
             AssetImage(
               'assets/logo/fb.jpg',
             ),
@@ -311,6 +339,47 @@ class _Login extends State<LoginPage> {
     );
   }
 
+  formLogin(){
+    return  Form(
+      child: Column(
+        key: _formKey,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          new ListTile(
+                title:new TextFormField(
+                  validator: (value) {
+                    if (value.isEmpty) {
+                      return 'Ingrese su correo';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) => _person.name = value,
+                ),
+              ),
+              new ListTile(
+                title: new TextFormField(
+                validator: (value) {
+                  if (value.isEmpty) {
+                    return 'Ingrese su contraseña';
+                  }
+                  return null;
+                },
+                onSaved: (value) =>_person.email = value
+              ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: RaisedButton(
+                  onPressed: () {
+                    iraHome();
+                  },
+                  child: Text('Iniciar Sesión'),
+                ),
+              ),
+        ]
+      )
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -357,15 +426,19 @@ class _Login extends State<LoginPage> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 30.0),
-                      _buildEmailTF(),
-                      SizedBox(
-                        height: 30.0,
-                      ),
-                      _buildPasswordTF(),
+                      /*new Form(
+                          child: Column(key: _formKey, children: <Widget>[
+                        SizedBox(height: 30.0),
+                        _buildEmailTF(),
+                        SizedBox(
+                          height: 30.0,
+                        ),
+                        _buildPasswordTF(),
+                        
+                        _buildLoginBtn(),
+                      ])),*/
+                      formLogin(),
                       _buildForgotPasswordBtn(),
-                      _buildRememberMeCheckbox(),
-                      _buildLoginBtn(),
                       _buildSignInWithText(),
                       _buildSocialBtnRow(),
                       _buildSignupBtn(),

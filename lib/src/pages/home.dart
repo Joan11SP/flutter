@@ -7,6 +7,7 @@ import 'dart:async';
 import 'package:toast/toast.dart';
 //import 'users.dart';
 //import '../providers/notifications.dart';
+//import '../services/api_request.dart';
 
 class MyHome extends StatefulWidget {
   @override
@@ -16,14 +17,15 @@ class MyHome extends StatefulWidget {
 
 class _MyAppState extends State<MyHome> {
   List data = [];
+  List data2 = [];
   Future<void> getApi() async {
     http.Response response =
         await http.get('https://jsonplaceholder.typicode.com/users');
     setState(() {
       data = json.decode(response.body);
+      
     });
   }
-
   @override
   void initState() {
     super.initState();
@@ -61,6 +63,7 @@ class _MyAppState extends State<MyHome> {
               children: <Widget>[
                 Icon(Icons.person),
                 Text('${data[index]["name"]}'),
+                //Text('${data[index]["address"]["city"]}'),
               ],
             ),
             onTap: () async {
@@ -68,10 +71,10 @@ class _MyAppState extends State<MyHome> {
               Toast.show('${data[index]["name"]}', context,
                   duration: Toast.LENGTH_SHORT, gravity: Toast.BOTTOM);
               // Scaffold.of(context).showSnackBar(snackBar);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (BuildContext context) => Users()),
-              );
+             //Navigator.push(
+             //  context,
+             //  MaterialPageRoute(builder: (BuildContext context) => Users()),
+             //);
               //_settingModalBottomSheet(context, data, index);
             },
           ));

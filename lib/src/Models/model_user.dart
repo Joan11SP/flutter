@@ -3,10 +3,10 @@ class Person {
   String email;
   String last_name;
 
-  Person({this.name, this.email, this.last_name});
+  Person({this.name, this.email});
 
   user() {
-    return {'name': name, 'email': email,'last_name':last_name};
+    return {'dni':name, 'password': email};
   }
 
 }
