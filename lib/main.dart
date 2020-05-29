@@ -6,12 +6,15 @@ void main() => runApp(MyApp());
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Ala Orden',
-      debugShowCheckedModeBanner: false,
-      home: MapOpen()
-    );
+    var materialApp = MaterialApp(
+        themeMode:ThemeMode.dark,
+        title: 'Ala Orden',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+            appBarTheme: AppBarTheme(
+          color: Color(0xFF01579B),
+        )),
+        home: MapOpen());
+    return materialApp;
   }
 }
-
-

@@ -2,5 +2,6 @@
     <string name="app_name">AlaOrden</string>
     <string name="facebook_app_id">1662258603938806</string>
     <string name="fb_login_protocol_scheme">fb1662258603938806</string>
+    <string name="token_mapbox">pk.eyJ1IjoiYWxhb3JkZW4xMSIsImEiOiJja2FwbXQzcmEwMDJ5MnBxbmFnc244eGMyIn0.0hmKSX1yH55LtHR30biafQ</string>
 
 </resources>

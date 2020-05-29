@@ -1,25 +1,27 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_facebook_login/flutter_facebook_login.dart';
+//import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:nannys/src/Models/model_user.dart';
 import 'package:nannys/src/pages/home.dart';
 import 'package:nannys/src/services/api_request.dart';
 import 'package:toast/toast.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 class LoginPage extends StatefulWidget {
   @override
   _Login createState() => _Login();
 }
 
-final _formKey = GlobalKey<FormState>();
 class _Login extends State<LoginPage> {
   bool isLogged = false;
-
+  
+  final _formKey = GlobalKey<FormState>();
   Person _person = new Person();
 
-  loginFacebook() async {
+  /*loginFacebook() async {
     final fbLogin = FacebookLogin();
     final result = await fbLogin.logInWithReadPermissions(['email']);
 
@@ -37,11 +39,21 @@ class _Login extends State<LoginPage> {
         break;
     }
   }
-
+  */
+  loginSharedPreferences(data) async {
+    
+    final sharedPrefences =  await SharedPreferences.getInstance();
+    sharedPrefences.setString('sesionAlaOrden', jsonDecode(data));
+  }
   logged(bool login) {
     setState(() {
       isLogged = login;
     });
+  }
+  
+  logOut() async {
+    final sharedPrefences =  await SharedPreferences.getInstance();
+    sharedPrefences.remove('sesionAlaOrden');
   }
 
   iraHome() {
@@ -50,7 +62,7 @@ class _Login extends State<LoginPage> {
       MaterialPageRoute(builder: (BuildContext context) => MyHome()),
     );
   }
-
+  /*
   //data of user logged with fb
   getDataUser(FacebookLoginResult result) async {
     final token = result.accessToken.token;
@@ -61,12 +73,12 @@ class _Login extends State<LoginPage> {
         duration: Toast.LENGTH_SHORT, gravity: Toast.BOTTOM);
     return print(profile);
   }
-
+  
   loginApi(login) async {
     http.Response response = await loginUser(login);
     print(json.decode(response.body));
   }
-
+  */
   bool _rememberMe = false;
   final kHintTextStyle = TextStyle(
     color: Colors.white54,
@@ -191,34 +203,7 @@ class _Login extends State<LoginPage> {
       ),
     );
   }
-
-  Widget _buildRememberMeCheckbox() {
-    return Container(
-      height: 20.0,
-      child: Row(
-        children: <Widget>[
-          Theme(
-            data: ThemeData(unselectedWidgetColor: Colors.white),
-            child: Checkbox(
-              value: _rememberMe,
-              checkColor: Colors.green,
-              activeColor: Colors.white,
-              onChanged: (value) {
-                setState(() {
-                  _rememberMe = value;
-                });
-              },
-            ),
-          ),
-          Text(
-            'Recordar',
-            style: kLabelStyle,
-          ),
-        ],
-      ),
-    );
-  }
-
+  /*
   Widget _buildLoginBtn() {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 25.0),
@@ -244,7 +229,7 @@ class _Login extends State<LoginPage> {
       ),
     );
   }
-
+  */
   Widget _buildSignInWithText() {
     return Column(
       children: <Widget>[
@@ -347,6 +332,7 @@ class _Login extends State<LoginPage> {
         children: <Widget>[
           new ListTile(
                 title:new TextFormField(
+                  decoration: InputDecoration(labelText: 'Correo'),
                   validator: (value) {
                     if (value.isEmpty) {
                       return 'Ingrese su correo';
@@ -358,6 +344,7 @@ class _Login extends State<LoginPage> {
               ),
               new ListTile(
                 title: new TextFormField(
+                decoration: InputDecoration(labelText: 'Contraseña'),
                 validator: (value) {
                   if (value.isEmpty) {
                     return 'Ingrese su contraseña';

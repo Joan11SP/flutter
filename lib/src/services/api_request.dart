@@ -7,6 +7,6 @@ loginUser(login){
   return http.post('$url/login',body: login);
 }
 
-getAdress(latitud,longitud){
+getAddress(latitud,longitud){
   return http.post('https://nominatim.openstreetmap.org/reverse?format=geojson&lat=$latitud&lon=$longitud');
 }

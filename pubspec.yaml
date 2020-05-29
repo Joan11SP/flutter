@@ -25,10 +25,13 @@ dependencies:
   cupertino_icons: ^0.1.2
   firebase_messaging: ^6.0.15
   flutter_facebook_login: 2.0.1
-  flutter_osm_plugin: ^0.3.6+1
   http: ^0.12.1
-  toast: ^0.1.5
-  
+  toast: ^0.1.5  
+  mapbox_gl: ^0.0.5
+  permission_handler: ^5.0.0+hotfix.6
+  geolocator: 5.3.1
+  shared_preferences: 0.5.7+3
+  datetime_picker_formfield: 1.0.0
 
 dev_dependencies:
   flutter_test:
