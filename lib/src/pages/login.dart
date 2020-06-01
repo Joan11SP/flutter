@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 //import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:nannys/src/Models/model_user.dart';
-import 'package:nannys/src/pages/home.dart';
+import 'package:nannys/src/pages/map.dart';
+import 'package:nannys/src/pages/users.dart';
 import 'package:nannys/src/services/api_request.dart';
 import 'package:toast/toast.dart';
 import 'package:http/http.dart' as http;
@@ -17,69 +18,33 @@ class LoginPage extends StatefulWidget {
 
 class _Login extends State<LoginPage> {
   bool isLogged = false;
-  
+
   final _formKey = GlobalKey<FormState>();
   Person _person = new Person();
 
-  /*loginFacebook() async {
-    final fbLogin = FacebookLogin();
-    final result = await fbLogin.logInWithReadPermissions(['email']);
-
-    switch (result.status) {
-      case FacebookLoginStatus.loggedIn:
-        getDataUser(result);
-        logged(true);
-        iraHome();
-        break;
-      case FacebookLoginStatus.cancelledByUser:
-        print('cancelado');
-        break;
-      case FacebookLoginStatus.error:
-        print(result.errorMessage);
-        break;
-    }
-  }
-  */
   loginSharedPreferences(data) async {
-    
-    final sharedPrefences =  await SharedPreferences.getInstance();
+    final sharedPrefences = await SharedPreferences.getInstance();
     sharedPrefences.setString('sesionAlaOrden', jsonDecode(data));
   }
+
   logged(bool login) {
     setState(() {
       isLogged = login;
     });
   }
-  
+
   logOut() async {
-    final sharedPrefences =  await SharedPreferences.getInstance();
+    final sharedPrefences = await SharedPreferences.getInstance();
     sharedPrefences.remove('sesionAlaOrden');
   }
 
   iraHome() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (BuildContext context) => MyHome()),
+      MaterialPageRoute(builder: (BuildContext context) => MapOpen()),
     );
   }
-  /*
-  //data of user logged with fb
-  getDataUser(FacebookLoginResult result) async {
-    final token = result.accessToken.token;
-    final graphResponse = await http.get(
-        'https://graph.facebook.com/v2.12/me?fields=name,first_name,last_name,email&access_token=$token');
-    final profile = json.decode(graphResponse.body);
-    Toast.show('${profile["name"]}', context,
-        duration: Toast.LENGTH_SHORT, gravity: Toast.BOTTOM);
-    return print(profile);
-  }
-  
-  loginApi(login) async {
-    http.Response response = await loginUser(login);
-    print(json.decode(response.body));
-  }
-  */
-  bool _rememberMe = false;
+
   final kHintTextStyle = TextStyle(
     color: Colors.white54,
     fontFamily: 'OpenSans',
@@ -103,133 +68,6 @@ class _Login extends State<LoginPage> {
     ],
   );
 
-  Widget _buildEmailTF() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(
-          'Correo',
-          style: kLabelStyle,
-        ),
-        SizedBox(height: 10.0),
-        Container(
-          alignment: Alignment.centerLeft,
-          decoration: kBoxDecorationStyle,
-          height: 60.0,
-          child: TextFormField(
-            onSaved: (value) {
-              _person.email = value;
-            },
-            keyboardType: TextInputType.emailAddress,
-            style: TextStyle(
-              color: Colors.white,
-              fontFamily: 'OpenSans',
-            ),
-            validator: (value) {
-              if (value.isEmpty) {
-                return 'Please enter some text';
-              }
-              return null;
-            },
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.only(top: 14.0),
-              prefixIcon: Icon(
-                Icons.email,
-                color: Colors.white,
-              ),
-              hintText: 'Ingresar tu correo',
-              hintStyle: kHintTextStyle,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPasswordTF() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(
-          'Contraseña',
-          style: kLabelStyle,
-        ),
-        SizedBox(height: 10.0),
-        Container(
-          alignment: Alignment.centerLeft,
-          decoration: kBoxDecorationStyle,
-          height: 60.0,
-          child: TextFormField(
-            onSaved: (value) => _person.name = value,
-            obscureText: true,
-            style: TextStyle(
-              color: Colors.white,
-              fontFamily: 'OpenSans',
-            ),
-            validator: (value) {
-              if (value.isEmpty) {
-                return 'Please enter some text';
-              }
-
-              return null;
-            },
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.only(top: 14.0),
-              prefixIcon: Icon(
-                Icons.lock,
-                color: Colors.white,
-              ),
-              hintText: 'Ingresa tu contraseña',
-              hintStyle: kHintTextStyle,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildForgotPasswordBtn() {
-    return Container(
-      alignment: Alignment.centerRight,
-      child: FlatButton(
-        onPressed: () => print('Forgot Password Button Pressed'),
-        padding: EdgeInsets.only(right: 0.0),
-        child: Text(
-          'Olvidaste tu contraseña?',
-          style: kLabelStyle,
-        ),
-      ),
-    );
-  }
-  /*
-  Widget _buildLoginBtn() {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 25.0),
-      width: double.infinity,
-      child: RaisedButton(
-        elevation: 5.0,
-        onPressed: () => { },
-        padding: EdgeInsets.all(15.0),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30.0),
-        ),
-        color: Colors.white,
-        child: Text(
-          'Iniciar Sesión',
-          style: TextStyle(
-            color: Color(0xFF527DAA),
-            letterSpacing: 1.5,
-            fontSize: 18.0,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'OpenSans',
-          ),
-        ),
-      ),
-    );
-  }
-  */
   Widget _buildSignInWithText() {
     return Column(
       children: <Widget>[
@@ -249,6 +87,7 @@ class _Login extends State<LoginPage> {
     );
   }
 
+  //logo for register with fb or
   Widget _buildSocialBtn(Function onTap, AssetImage logo) {
     return GestureDetector(
       onTap: onTap,
@@ -280,7 +119,7 @@ class _Login extends State<LoginPage> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
           _buildSocialBtn(
-            () => {iraHome()},
+            () => iraHome(),
             AssetImage(
               'assets/logo/fb.jpg',
             ),
@@ -298,12 +137,17 @@ class _Login extends State<LoginPage> {
 
   Widget _buildSignupBtn() {
     return GestureDetector(
-      onTap: () => print('Sign Up Button Pressed'),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (BuildContext context) => Users()),
+        );
+      },
       child: RichText(
         text: TextSpan(
           children: [
             TextSpan(
-              text: 'Don\'t have an Account? ',
+              text: 'No tienes una cuenta?',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 18.0,
@@ -311,7 +155,7 @@ class _Login extends State<LoginPage> {
               ),
             ),
             TextSpan(
-              text: 'Sign Up',
+              text: 'Resgistrate',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 18.0,
@@ -324,26 +168,27 @@ class _Login extends State<LoginPage> {
     );
   }
 
-  formLogin(){
-    return  Form(
-      child: Column(
-        key: _formKey,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
+  //form for login
+  formLogin() {
+    return Form(
+        child: Column(
+            key: _formKey,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
           new ListTile(
-                title:new TextFormField(
-                  decoration: InputDecoration(labelText: 'Correo'),
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return 'Ingrese su correo';
-                    }
-                    return null;
-                  },
-                  onSaved: (value) => _person.name = value,
-                ),
-              ),
-              new ListTile(
-                title: new TextFormField(
+            title: new TextFormField(
+              decoration: InputDecoration(labelText: 'Correo'),
+              validator: (value) {
+                if (value.isEmpty) {
+                  return 'Ingrese su correo';
+                }
+                return null;
+              },
+              onSaved: (value) => _person.firstName = value,
+            ),
+          ),
+          new ListTile(
+            title: new TextFormField(
                 decoration: InputDecoration(labelText: 'Contraseña'),
                 validator: (value) {
                   if (value.isEmpty) {
@@ -351,22 +196,34 @@ class _Login extends State<LoginPage> {
                   }
                   return null;
                 },
-                onSaved: (value) =>_person.email = value
-              ),
-              ),
-              Padding(
+                onSaved: (value) => _person.email = value),
+          ),
+          Center(
+              child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: RaisedButton(
+                  elevation: 5.0,
+                  padding: EdgeInsets.symmetric(horizontal: 30),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30.0),
+                  ),
+                  color: Color(0xFF01579B),
+                  textColor: Color(0xFFFFFFFF),
                   onPressed: () {
-                    iraHome();
+                    if (_formKey.currentState.validate()) {
+                      // Si el formulario es válido, queremos mostrar un Snackbar
+                      final FormState formState = _formKey.currentState;
+                      formState.save();
+                    }
                   },
                   child: Text('Iniciar Sesión'),
                 ),
               ),
-        ]
-      )
-    );
+            ),
+        ]));
   }
+
+  //veiw of the page login
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -413,22 +270,10 @@ class _Login extends State<LoginPage> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      /*new Form(
-                          child: Column(key: _formKey, children: <Widget>[
-                        SizedBox(height: 30.0),
-                        _buildEmailTF(),
-                        SizedBox(
-                          height: 30.0,
-                        ),
-                        _buildPasswordTF(),
-                        
-                        _buildLoginBtn(),
-                      ])),*/
                       formLogin(),
-                      _buildForgotPasswordBtn(),
-                      _buildSignInWithText(),
-                      _buildSocialBtnRow(),
                       _buildSignupBtn(),
+                      //_buildSignInWithText(),
+                      //_buildSocialBtnRow(),
                     ],
                   ),
                 ),

@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:nannys/src/UI/menu.dart';
-import 'package:nannys/src/pages/users.dart';
 import 'package:nannys/src/services/api_request.dart';
 import 'package:toast/toast.dart';
 import 'dart:async';
@@ -10,30 +9,31 @@ import 'package:flutter/rendering.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
+
 class MapOpen extends StatefulWidget {
   @override
   _MapOSM createState() => _MapOSM();
 }
 
-
 class _MapOSM extends State<MapOpen> {
   Map address;
-  double lat, lon;
   MapboxMapController mapController;
-  bool _myLocationEnabled = true;
-  //Permission _permission;
-//check permission location
-  getAddressPosition(lat,long) async {
+  String _myLocation;
+  bool gps = false;
+  Position _currentPosition;
+  String mylocation;
+  int idPedido= 0 ; 
+  //cualquier posicion
+  getAddressPosition(lat, long) async {
     http.Response response = await getAddress(lat, long);
     address = json.decode(response.body);
 
     setState(() => address = json.decode(response.body));
-    
-    Toast.show('${address['features'][0]['properties']['display_name']}', context,
-          duration: Toast.LENGTH_SHORT, gravity: Toast.BOTTOM);
 
     if (response.statusCode == 201) {
-      return print(address);
+      return Toast.show(
+          '${address['features'][0]['properties']['display_name']}', context,
+          duration: Toast.LENGTH_SHORT, gravity: Toast.BOTTOM);
     } else {
       return print(address);
     }
@@ -46,8 +46,8 @@ class _MapOSM extends State<MapOpen> {
     print(statuses[Permission.location]);
   }
 
-  //si el gps esta encendido
-  Future _checkGps() async {
+  // ! si el gps esta encendido
+  _checkGps() async {
     if (!(await Geolocator().isLocationServiceEnabled())) {
       showDialog(
           context: context,
@@ -63,7 +63,39 @@ class _MapOSM extends State<MapOpen> {
               ],
             );
           });
+      setState(() {
+        gps = false;
+      });
+    } else {
+      setState(() {
+        gps = true;
+      });
     }
+  }
+
+  _getCurrentLocation() {
+    final Geolocator geolocator = Geolocator();
+    geolocator
+        .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
+        .then((Position position) {
+      setState(() {
+        _currentPosition = position;
+      });
+    }).catchError((e) {
+      print(e);
+    });
+  }
+
+  getLocation() async {
+    http.Response response =
+        await getAddress(_currentPosition.latitude, _currentPosition.longitude);
+    address = json.decode(response.body);
+
+    setState(() {
+      address = json.decode(response.body);
+      mylocation = address['features'][0]['properties']['display_name'];
+      _myLocation = address['features'][0]['properties']['name'];
+    });
   }
 
   @override
@@ -71,106 +103,246 @@ class _MapOSM extends State<MapOpen> {
     super.initState();
     permission();
     _checkGps();
+    _getCurrentLocation();
+    getLocation();
+  }
+
+  viewMap() {
+    return Card(
+      child: MapboxMap(
+        myLocationEnabled:true,
+        initialCameraPosition: CameraPosition(
+            target: LatLng(-3.982726555151, -79.35828888), zoom: 15),
+        onMapClick: (point, latLng) {
+          getAddressPosition(latLng.latitude, latLng.longitude);
+        },
+        styleString: MapboxStyles.MAPBOX_STREETS,
+        compassEnabled: false,
+        rotateGesturesEnabled: false,
+        onMapCreated: onMapCreated,
+      ),
+    );
   }
 
   //header of the activity
   appBar() {
     return AppBar(
-      title: const Text('Mi Dirección'),
+      title: Image.asset(
+        'assets/logo/alaOrdenCopia.png',
+        width: 250,
+        height: 50,
+      ),
       actions: <Widget>[
         IconButton(
-          onPressed: () async {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (BuildContext context) => Users()),
-            );
-          },
-          icon: Icon(Icons.directions_bike),
-        ),
-        IconButton(
-          onPressed: () async {
-            Toast.show('', context,
-                duration: Toast.LENGTH_SHORT, gravity: Toast.BOTTOM);
-          },
+          onPressed: () {},
           icon: Icon(Icons.search),
         )
       ],
     );
   }
 
-  //en el footer
-  bottonNavigationBar() {
-    return BottomNavigationBar(
-      currentIndex: 0, // this will be set when a new tab is tapped
-      type: BottomNavigationBarType.fixed, //cuando es mas de 4 items
-      items: <BottomNavigationBarItem>[
-        BottomNavigationBarItem(
-          icon: new Icon(Icons.home),
-          title: new Text('Home'),
+  myLocation() {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: Container(
+        height: 120,
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            margin: EdgeInsets.symmetric(vertical: 18.0),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Icon(
+                        Icons.room,
+                        color: Colors.green,
+                      ),
+                      if (_currentPosition != null && mylocation != null)
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: '$mylocation',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13.0,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      FlatButton(
+                        child: Text("Obtener posición"),
+                        onPressed: () {
+                          _getCurrentLocation();
+                          getLocation();
+                        },
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ),
+            color: Color(0xFF01579B),
+          ),
         ),
-        BottomNavigationBarItem(
-          icon: new Icon(Icons.mail),
-          title: new Text('Messages'),
+      ),
+    );
+  }
+
+  botonFooter(){
+    return Row(      
+      mainAxisSize: MainAxisSize.max,      
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: <Widget>[
+        InkWell(
+          child: Image.asset('assets/logo/moto.png', width: 50, height: 50),
+          onTap: () {
+             
+          },
         ),
-        BottomNavigationBarItem(
-            icon: Icon(Icons.person), title: Text('Profile')),
-        BottomNavigationBarItem(
-            icon: Icon(Icons.directions_car), title: Text('Ubicacion')),
+        InkWell(
+          child: Image.asset('assets/logo/taxi.png', width: 50, height: 50),
+          onTap: () {
+            showModalBottomSheet(
+                context: context,
+                builder: (context) {
+                  return Card(
+                    child: formPedidos()
+                  );
+                });
+            setState(()=>print(idPedido = 1) );
+          },
+        ),
+        InkWell(
+          child:Image.asset('assets/logo/flete.png', width: 50, height: 50),
+          onTap: () {
+            showModalBottomSheet(
+                context: context,
+                builder: (context) {
+                  return Card(
+                    child: formPedidos()
+                  );
+                });
+            setState(()=>print(idPedido = 2) );
+          },
+        ),
+        InkWell(          
+          child: Image.asset('assets/logo/camioneta.png', width: 50, height: 50),          
+          onTap: () {
+            showModalBottomSheet(
+                context: context,
+                builder: (context) {
+                  return Card(
+                    child: formPedidos()
+                  );
+                });
+            setState(()=>print(idPedido = 3) );
+          },
+        ),
       ],
-    );
+    );    
   }
+  formPedidos() {
+    return Form(
+      //key: _formKey,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            new ListTile(
+              title: new TextFormField(
+                decoration: const InputDecoration(
+                    hintText:'Calle Principal', icon: Icon(Icons.flag)),
+                
+                onSaved: (value) {
+                  // _person.cedula = value;
+                },
+                initialValue: _myLocation,
+              ),
+            ),
+            new ListTile(
+              title: new TextFormField(
+                decoration: const InputDecoration(
+                    hintText: 'Calle Secundaria', icon: Icon(Icons.flag)),
+                
+                // onSaved: (value) => _person.firstName = value,
+              ),
+            ),
+            new ListTile(
+              title: new TextFormField(
+                decoration: const InputDecoration(
+                    hintText: 'Referencia', icon: Icon(Icons.location_city)),
+                
+                onSaved: (value) {
+                  //  _person.lastName = value;
+                },
+              ),
+            ),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: RaisedButton(
+                  elevation: 5.0,
+                  padding: EdgeInsets.symmetric(horizontal: 30),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30.0),
+                  ),
+                  color: Color(0xFF01579B),
+                  textColor: Color(0xFFFFFFFF),
+                  onPressed: () {
+                    if (true) {
+                      // Si el formulario es válido, queremos mostrar un Snackbar
+                      //final FormState formState = _formKey.currentState;
+                      //formState.save();
 
-  Widget _bottonAction(IconData data) {
-    return InkWell(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Icon(data),
-        
+                      /*Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (BuildContext context) => MapOpen()),
+                      );*/
+                    }
+                  },
+                  child: Text('Aceptar'),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-      onTap: () {},
     );
   }
-
-  boton() {
-    return BottomAppBar(
-      child: Row(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: <Widget>[ 
-          _bottonAction(Icons.time_to_leave),
-          _bottonAction(Icons.time_to_leave),
-          _bottonAction(Icons.time_to_leave),
-          _bottonAction(Icons.time_to_leave),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: appBar(),
       drawer: Menu(),
-      body: Card(
-        child: MapboxMap(
-          myLocationEnabled: _myLocationEnabled,
-          initialCameraPosition: CameraPosition(
-              target: LatLng(-3.982726555151, -79.35828888), zoom: 15),
-          onMapClick: (point, latLng) {
-            getAddressPosition(latLng.latitude, latLng.longitude);
-          },
-          styleString: MapboxStyles.MAPBOX_STREETS,
-          compassEnabled: false,
-          rotateGesturesEnabled: false,
-          onMapCreated: onMapCreated,
-        ),
+      body: Stack(
+        children: <Widget>[
+          viewMap(),
+          myLocation(),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor:Color(0xFF01579B),
-        onPressed: () async {},
-        child: Icon(Icons.my_location),
+        backgroundColor: Color(0xFF004080),
+        onPressed: () async {
+          _getCurrentLocation();
+          getLocation();
+        },
+        child: Icon(Icons.person_pin_circle),
       ),
-      bottomNavigationBar: boton(),
+      bottomNavigationBar: BottomAppBar(
+        child: botonFooter(),
+        color: Color(0xFF004080),
+      ),
     );
   }
 
@@ -181,16 +353,6 @@ class _MapOSM extends State<MapOpen> {
 
   CameraPosition _position = _kInitialPosition;
   bool _isMoving = false;
-  //bool _compassEnabled = true;
-  //CameraTargetBounds _cameraTargetBounds = CameraTargetBounds.unbounded;
-  //MinMaxZoomPreference _minMaxZoomPreference = MinMaxZoomPreference.unbounded;
-  //String _styleString = MapboxStyles.MAPBOX_STREETS;
-  //bool _rotateGesturesEnabled = true;
-  //bool _scrollGesturesEnabled = true;
-  //bool _tiltGesturesEnabled = true;
-  //bool _zoomGesturesEnabled = true;
-  //bool _myLocationEnabled = true;
-  //MyLocationTrackingMode _myLocationTrackingMode = MyLocationTrackingMode.Tracking;
 
   void onMapCreated(MapboxMapController controller) {
     mapController = controller;
@@ -214,45 +376,4 @@ class _MapOSM extends State<MapOpen> {
     mapController.removeListener(_onMapChanged);
     super.dispose();
   }
-
-  /*@override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Card(
-        child: MapboxMap(
-          onMapCreated: onMapCreated,
-      initialCameraPosition: _kInitialPosition,
-      trackCameraPosition: true,
-      compassEnabled: _compassEnabled,
-      cameraTargetBounds: _cameraTargetBounds,
-      minMaxZoomPreference: _minMaxZoomPreference,
-      styleString: _styleString,
-      rotateGesturesEnabled: _rotateGesturesEnabled,
-      scrollGesturesEnabled: _scrollGesturesEnabled,
-      tiltGesturesEnabled: _tiltGesturesEnabled,
-      zoomGesturesEnabled: _zoomGesturesEnabled,
-      myLocationEnabled: _myLocationEnabled,
-      myLocationTrackingMode: _myLocationTrackingMode,
-      myLocationRenderMode: MyLocationRenderMode.GPS,
-      onMapClick: (point, latLng) async {
-        Icon(Icons.person_pin_circle);
-                Toast.show('${latLng.latitude}/${latLng.longitude}', context,
-                duration: Toast.LENGTH_SHORT, gravity: Toast.BOTTOM);
-      
-        List features = await mapController.queryRenderedFeatures(point, [],null);
-        if (features.length>0) {
-          print(features[0]);
-        }
-      },
-        ),
-      ),
-    );
-  }
-  void onMapCreated(MapboxMapController controller) {
-    mapController = controller;
-    mapController.addListener(_onMapChanged);
-    _extractMapInfo();
-
-    
-  }*/
 }
